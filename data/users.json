@@ -1,0 +1,24 @@
+{
+  "users": [
+    {
+      "id": "user_wplu8yriv",
+      "name": "arsh",
+      "department": "Business",
+      "contributions": 2328,
+      "visits": 5,
+      "joinedAt": "2025-12-01T06:19:21.328Z",
+      "achievements": [
+        {
+          "id": "01pq2mcjw",
+          "type": "first_donation",
+          "unlockedAt": "2025-12-01T06:20:34.634Z"
+        },
+        {
+          "id": "k4r0vijz3",
+          "type": "big_donor",
+          "unlockedAt": "2025-12-01T06:20:52.043Z"
+        }
+      ]
+    }
+  ]
+}

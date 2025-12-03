@@ -1,1 +1,103 @@
 @import "tailwindcss";
+
+@theme {
+    --font-sans: "Inter", sans-serif;
+    --font-serif: "Playfair Display", serif;
+}
+
+:root {
+    /* Fintech Blue Theme */
+    --bg-app: #111111;
+    /* Near Black */
+    --bg-panel: #ffffff;
+
+    --primary: #2563eb;
+    /* Royal Blue */
+    --primary-dark: #1d4ed8;
+    --primary-light: #60a5fa;
+
+    --text-main: #1f2937;
+    --text-secondary: #6b7280;
+    --text-inverse: #ffffff;
+
+    --card-radius: 24px;
+}
+
+body {
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+}
+
+/* Dashboard Grid Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 24px;
+    padding: 24px;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+/* The Blue "Visa" Card */
+.fintech-card {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    border-radius: var(--card-radius);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.5);
+}
+
+.fintech-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    transform: translate(30%, -30%);
+}
+
+/* White Content Panels */
+.content-panel {
+    background: var(--bg-panel);
+    border-radius: var(--card-radius);
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Action Buttons */
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3f4f6;
+    color: var(--text-main);
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background-color: #e5e7eb;
+    transform: scale(1.05);
+}

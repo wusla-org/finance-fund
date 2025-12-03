@@ -1,34 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# College Sponsorship Tracker
 
-## Getting Started
+A premium, high-performance web application designed to track and display sponsorship funds for our college event.
 
-First, run the development server:
+## 🎯 Objectives
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Real-time Fund Tracking**: Visually stunning display of total funds collected vs. the goal.
+- **Sponsor Recognition**: Showcase donors and sponsors with premium animations.
+- **High-End Aesthetics**: Glassmorphism, smooth transitions, and interactive elements to impress visitors.
+
+## � Current Situation & Context
+
+- **Active Campaign**: Our college is currently in the middle of a major sponsorship collection drive.
+- **Display Use Case**: This web app is intended to be projected on large displays in the college to show real-time progress.
+- **Motivation**: By displaying the live fund count and recognizing sponsors instantly, we aim to motivate more students and organizations to contribute.
+- **Transparency**: The app serves as a transparent ledger, showing exactly how much has been raised and from whom.
+- **Visual Impact**: The design focuses on high-impact visuals (animations, glassmorphism) to catch attention during the event/drive.
+
+## �🚀 Tech Stack
+
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/)
+- **Animations:** [Framer Motion](https://www.framer.com/motion/)
+- **Icons:** [Lucide React](https://lucide.dev/)
+
+## 📂 Project Structure
+
+```
+d:/codes/finance/
+├── src/
+│   ├── app/          # Pages and Layouts
+│   ├── components/   # Reusable UI components (Hero, Progress, DonorList)
+│   └── lib/          # Utilities
+└── ...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📝 Features Roadmap
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] **Hero Section**: Large animated counter and progress ring.
+- [ ] **Live Ticker**: Scrolling marquee of recent sponsors.
+- [ ] **Leaderboard**: Top sponsors highlighted in gold/silver/bronze cards.
+- [ ] **Interactive "Sponsor Us"**: Modal or link to payment gateway.
