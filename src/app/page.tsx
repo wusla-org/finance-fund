@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { HeroStats } from "@/components/hero-stats";
 import { DepartmentList } from "@/components/department-list";
+import { StudentTable } from "@/components/student-table";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,19 @@ async function getDepartments() {
 }
 
 async function getStudents() {
-  const students = await prisma.student.findMany();
+  const students = await prisma.student.findMany({
+    include: {
+      department: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    orderBy: {
+      updatedAt: 'desc',
+    },
+    take: 10, // Limit to recent 10
+  });
   return students;
 }
 
