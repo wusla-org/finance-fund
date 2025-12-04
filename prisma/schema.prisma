@@ -28,4 +28,15 @@ model Student {
   updatedAt    DateTime   @updatedAt
 
   @@index([departmentId])
+  contributions Contribution[]
+}
+
+model Contribution {
+  id        String   @id @default(cuid())
+  amount    Float
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([studentId])
 }

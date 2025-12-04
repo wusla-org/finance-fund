@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Save } from "lucide-react";
 
 interface Department {
@@ -13,14 +14,29 @@ interface DataEntryFormProps {
 }
 
 export function DataEntryForm({ departments }: DataEntryFormProps) {
+    const router = useRouter();
     const [name, setName] = useState("");
     const [departmentId, setDepartmentId] = useState(departments[0]?.id || "");
     const [amountPaid, setAmountPaid] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState("");
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [pendingData, setPendingData] = useState<any>(null);
+
+    // Check if departments exist
+    if (!departments || departments.length === 0) {
+        return (
+            <div className="bento-card p-8">
+                <div className="text-center text-yellow-400 p-8">
+                    <h3 className="text-xl font-bold mb-4">No Departments Yet</h3>
+                    <p className="text-slate-400">Please create a department first using the form on the left.</p>
+                </div>
+            </div>
+        );
+    }
+
+    const submitData = async (force = false) => {
         setIsLoading(true);
         setMessage("");
 
@@ -32,25 +48,51 @@ export function DataEntryForm({ departments }: DataEntryFormProps) {
                     name,
                     departmentId,
                     amountPaid: Number(amountPaid),
+                    force
                 }),
             });
 
+            const data = await res.json();
+
             if (res.ok) {
-                setMessage("Student added successfully!");
+                if (data.requiresConfirmation) {
+                    setPendingData(data);
+                    setShowConfirm(true);
+                    setIsLoading(false);
+                    return;
+                }
+
+                setMessage("✅ Student added successfully!");
                 setName("");
                 setAmountPaid("");
+                setShowConfirm(false);
+                setPendingData(null);
+                // Refresh the page immediately to show new data
+                router.refresh();
             } else {
-                setMessage("Failed to add student.");
+                setMessage(`❌ Error: ${data.error || "Failed to add student"}`);
+                console.error("API Error:", data);
             }
         } catch (error) {
-            setMessage("An error occurred.");
+            setMessage(`❌ Network error: ${error instanceof Error ? error.message : "An error occurred"}`);
+            console.error("Fetch error:", error);
         } finally {
-            setIsLoading(false);
+            if (!showConfirm) setIsLoading(false);
         }
     };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await submitData(false);
+    };
+
+    const handleConfirm = async () => {
+        setShowConfirm(false);
+        await submitData(true);
+    };
+
     return (
-        <div className="bento-card p-8 max-w-2xl mx-auto">
+        <div className="bento-card p-8 max-w-2xl mx-auto relative">
             <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-white">
                 <Plus size={20} className="text-emerald-400" /> Add Student Record
             </h3>
@@ -117,6 +159,34 @@ export function DataEntryForm({ departments }: DataEntryFormProps) {
                     </div>
                 )}
             </form>
+
+            {/* Confirmation Modal */}
+            {showConfirm && (
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-3xl flex items-center justify-center p-6 z-50 animate-in fade-in duration-200">
+                    <div className="bg-gray-900 border border-gray-700 p-6 rounded-2xl max-w-sm w-full shadow-2xl">
+                        <h4 className="text-lg font-bold text-white mb-2">Duplicate Student Found</h4>
+                        <p className="text-gray-300 text-sm mb-6">
+                            {pendingData?.message || "This student already exists."}
+                            <br />
+                            Do you want to add this contribution to the existing student?
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowConfirm(false)}
+                                className="flex-1 py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirm}
+                                className="flex-1 py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Confirm & Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
