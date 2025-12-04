@@ -9,13 +9,13 @@ export const metadata: Metadata = {
   title: "Student Fund Collection",
   description: "Track and manage student fund contributions.",
   manifest: "/manifest.json",
-  themeColor: "#0f172a",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  themeColor: "#0f172a",
 };
 
 export default function RootLayout({
