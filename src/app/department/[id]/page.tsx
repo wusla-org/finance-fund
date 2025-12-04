@@ -10,7 +10,13 @@ interface DepartmentPageProps {
     }>;
 }
 
+import type { Viewport } from "next";
+
 export const dynamic = "force-dynamic";
+
+export const viewport: Viewport = {
+    themeColor: "#0f172a",
+};
 
 async function getDepartment(id: string) {
     const department = await prisma.department.findUnique({
