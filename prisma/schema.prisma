@@ -2,10 +2,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Use SQLite for local development
 datasource db {
-  provider = "postgresql"
-  url      = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Department {

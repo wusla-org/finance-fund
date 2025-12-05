@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useSpring, useTransform } from "framer-motion";
-import { Bell, Search, TrendingUp, Database } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import React, { useEffect } from "react";
 
 interface HeroStatsProps {
@@ -120,18 +120,7 @@ export function HeroStats({ totalCollected, goal, topStudents, dailyStats }: Her
                     <p className="text-gray-400 text-sm">Overview of financial status</p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <a href="/developer" className="bg-white/10 p-2 rounded-full hover:bg-white/20 cursor-pointer transition-colors" title="Developer Console">
-                        <Database size={20} />
-                    </a>
-                    <div className="bg-white/10 p-2 rounded-full hover:bg-white/20 cursor-pointer transition-colors">
-                        <Search size={20} />
-                    </div>
-                    <div className="bg-white/10 p-2 rounded-full hover:bg-white/20 cursor-pointer transition-colors">
-                        <Bell size={20} />
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-blue-600 border-2 border-white/20 overflow-hidden">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Profile" />
-                    </div>
+                    {/* Icons removed as requested */}
                 </div>
             </div>
 

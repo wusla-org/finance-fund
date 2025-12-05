@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
-import { StudentTable } from "@/components/student-table";
 import Link from "next/link";
-import { ArrowLeft, Trophy, Users, TrendingUp, Target, Award } from "lucide-react";
+import { ArrowLeft, Users, Target, TrendingUp, Award, Trophy, Crown, Star } from "lucide-react";
 import { notFound } from "next/navigation";
 
 interface DepartmentPageProps {
@@ -10,13 +9,7 @@ interface DepartmentPageProps {
     }>;
 }
 
-import type { Viewport } from "next";
-
 export const dynamic = "force-dynamic";
-
-export const viewport: Viewport = {
-    themeColor: "#0f172a",
-};
 
 async function getDepartment(id: string) {
     const department = await prisma.department.findUnique({
@@ -27,7 +20,7 @@ async function getDepartment(id: string) {
                     department: true,
                 },
                 orderBy: {
-                    name: "asc",
+                    amountPaid: "desc",
                 },
             },
         },
@@ -36,8 +29,7 @@ async function getDepartment(id: string) {
     if (!department) return null;
 
     const studentCount = department.students.length;
-    // Rule: 5k per student target
-    const target = studentCount * 5000;
+    const target = studentCount * 5000; // ₹5000 per student
     const totalCollected = department.students.reduce((acc: number, s: { amountPaid: number }) => acc + s.amountPaid, 0);
 
     return {
@@ -45,6 +37,53 @@ async function getDepartment(id: string) {
         totalCollected,
         target: target > 0 ? target : 5000,
     };
+}
+
+function formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0
+    }).format(amount);
+}
+
+function getClubInfo(percentage: number) {
+    if (percentage >= 100) {
+        return {
+            name: "Centenary Club",
+            icon: Crown,
+            color: "centenary",
+            description: "🎉 Goal Achieved! Outstanding achievement!"
+        };
+    } else if (percentage >= 75) {
+        return {
+            name: "Platinum Club",
+            icon: Trophy,
+            color: "platinum",
+            description: "Almost there! Just a bit more to reach the goal."
+        };
+    } else if (percentage >= 50) {
+        return {
+            name: "Golden Club",
+            icon: Star,
+            color: "golden",
+            description: "Halfway milestone achieved! Keep going!"
+        };
+    } else if (percentage >= 25) {
+        return {
+            name: "Silver Club",
+            icon: Award,
+            color: "silver",
+            description: "Great start! Building momentum."
+        };
+    } else {
+        return {
+            name: "Getting Started",
+            icon: Target,
+            color: "base",
+            description: "Every contribution counts. Let's reach 25%!"
+        };
+    }
 }
 
 export default async function DepartmentPage({ params }: DepartmentPageProps) {
@@ -55,169 +94,146 @@ export default async function DepartmentPage({ params }: DepartmentPageProps) {
         notFound();
     }
 
-    const percentage = Math.min((department.totalCollected / department.target) * 100, 100);
+    const percentage = department.target > 0 ? Math.min((department.totalCollected / department.target) * 100, 100) : 0;
     const participationCount = department.students.filter(s => s.amountPaid > 0).length;
     const participationRate = department.students.length > 0 ? (participationCount / department.students.length) * 100 : 0;
-    const averageContribution = participationCount > 0 ? department.totalCollected / participationCount : 0;
+    const remaining = Math.max(department.target - department.totalCollected, 0);
 
-    // Determine Club Theme
-    let club = "Base";
-    let theme = {
-        gradient: "from-slate-800 to-slate-900",
-        text: "text-slate-100",
-        accent: "text-slate-400",
-        border: "border-slate-700",
-        progress: "bg-slate-500",
-        badge: "bg-slate-800 text-slate-300",
-        icon: "text-slate-400"
-    };
-
-    if (percentage >= 100) {
-        club = "Centenary Club";
-        theme = {
-            gradient: "from-purple-900/80 to-indigo-900/80",
-            text: "text-purple-50",
-            accent: "text-purple-200",
-            border: "border-purple-500/30",
-            progress: "bg-gradient-to-r from-purple-400 to-indigo-400",
-            badge: "bg-purple-500/20 text-purple-200 border-purple-500/30",
-            icon: "text-purple-400"
-        };
-    } else if (percentage >= 75) {
-        club = "Platinum Club";
-        theme = {
-            gradient: "from-cyan-900/80 to-blue-900/80",
-            text: "text-cyan-50",
-            accent: "text-cyan-200",
-            border: "border-cyan-500/30",
-            progress: "bg-gradient-to-r from-cyan-400 to-blue-400",
-            badge: "bg-cyan-500/20 text-cyan-200 border-cyan-500/30",
-            icon: "text-cyan-400"
-        };
-    } else if (percentage >= 50) {
-        club = "Golden Club";
-        theme = {
-            gradient: "from-amber-900/80 to-yellow-900/80",
-            text: "text-amber-50",
-            accent: "text-amber-200",
-            border: "border-amber-500/30",
-            progress: "bg-gradient-to-r from-amber-400 to-yellow-400",
-            badge: "bg-amber-500/20 text-amber-200 border-amber-500/30",
-            icon: "text-amber-400"
-        };
-    } else if (percentage >= 25) {
-        club = "Silver Club";
-        theme = {
-            gradient: "from-slate-800 to-slate-900",
-            text: "text-slate-50",
-            accent: "text-slate-300",
-            border: "border-slate-600/50",
-            progress: "bg-gradient-to-r from-slate-400 to-gray-300",
-            badge: "bg-slate-700/50 text-slate-200 border-slate-600/50",
-            icon: "text-slate-400"
-        };
-    }
+    const club = getClubInfo(percentage);
+    const ClubIcon = club.icon;
 
     return (
-        <main className="min-h-screen py-12 bg-[#0a0a0a]">
-            <div className="container mx-auto px-4 max-w-7xl">
-                <div className="mb-10">
-                    <Link
-                        href="/"
-                        className="inline-flex items-center text-slate-400 hover:text-white transition-colors mb-8 group"
-                    >
-                        <ArrowLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
-                    </Link>
+        <main className="department-page">
+            <div className="department-container">
+                {/* Back Button */}
+                <Link href="/" className="back-link">
+                    <ArrowLeft size={18} />
+                    <span>Back to Dashboard</span>
+                </Link>
 
-                    {/* Hero Card */}
-                    <div className={`relative overflow-hidden rounded-3xl border ${theme.border} bg-gradient-to-br ${theme.gradient} p-8 md:p-12 shadow-2xl`}>
-                        {/* Background Glow */}
-                        <div className={`absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none`} />
+                {/* Club Badge Card */}
+                <div className={`club-banner ${club.color}`}>
+                    <div className="club-icon-wrapper">
+                        <ClubIcon size={32} />
+                    </div>
+                    <div className="club-info">
+                        <h3 className="club-name">{club.name}</h3>
+                        <p className="club-description">{club.description}</p>
+                    </div>
+                    <div className="club-percentage">{percentage.toFixed(0)}%</div>
+                </div>
 
-                        <div className="relative z-10 flex flex-col md:flex-row justify-between gap-8">
-                            <div className="flex-1">
-                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wider mb-4 ${theme.badge}`}>
-                                    <Award size={14} />
-                                    {club}
-                                </div>
-                                <h1 className={`text-4xl md:text-6xl font-serif font-bold mb-4 ${theme.text}`}>
-                                    {department.name}
-                                </h1>
-                                <div className={`flex items-center gap-6 ${theme.accent}`}>
-                                    <div className="flex items-center gap-2">
-                                        <Users size={18} />
-                                        <span className="font-medium">{department.students.length} Students</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Target size={18} />
-                                        <span className="font-medium">Goal: ₹{(department.target / 1000).toFixed(0)}k</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col items-start md:items-end justify-center">
-                                <div className={`text-sm font-bold uppercase tracking-widest mb-1 opacity-70 ${theme.text}`}>Total Collected</div>
-                                <div className={`text-5xl md:text-7xl font-bold mb-2 ${theme.text} tracking-tight`}>
-                                    ₹{department.totalCollected.toLocaleString('en-IN')}
-                                </div>
-                                <div className={`text-lg font-medium ${theme.accent}`}>
-                                    {percentage.toFixed(1)}% Funded
-                                </div>
-                            </div>
+                {/* Hero Section */}
+                <div className="department-hero">
+                    <div className="hero-content">
+                        <div className="hero-badge">
+                            <Users size={14} />
+                            <span>{department.students.length} Students</span>
                         </div>
+                        <h1 className="hero-title">{department.name}</h1>
+                        <p className="hero-subtitle">
+                            Target: {formatCurrency(department.target)} (₹5,000 × {department.students.length} students)
+                        </p>
+                    </div>
+                    <div className="hero-stats">
+                        <div className="hero-amount">{formatCurrency(department.totalCollected)}</div>
+                        <div className="hero-label">Collected</div>
+                    </div>
+                </div>
 
-                        {/* Progress Bar */}
-                        <div className="mt-12 relative">
-                            <div className="h-4 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm border border-white/5">
-                                <div
-                                    className={`h-full ${theme.progress} shadow-lg relative`}
-                                    style={{ width: `${percentage}%` }}
-                                >
-                                    <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite] skew-x-12"></div>
-                                </div>
-                            </div>
+                {/* Progress Section */}
+                <div className="progress-section">
+                    <div className="progress-header">
+                        <span className="progress-percentage">{percentage.toFixed(0)}% Complete</span>
+                        <span className="progress-remaining">{formatCurrency(remaining)} remaining</span>
+                    </div>
+                    <div className={`progress-bar-container ${club.color}`}>
+                        <div
+                            className="progress-bar-fill"
+                            style={{ width: `${percentage}%` }}
+                        />
+                        <div className="progress-milestone" style={{ left: '25%' }} data-label="Silver" />
+                        <div className="progress-milestone" style={{ left: '50%' }} data-label="Golden" />
+                        <div className="progress-milestone" style={{ left: '75%' }} data-label="Platinum" />
+                    </div>
+                    <div className="club-markers">
+                        <span className={percentage >= 25 ? 'active' : ''}>Silver 25%</span>
+                        <span className={percentage >= 50 ? 'active' : ''}>Golden 50%</span>
+                        <span className={percentage >= 75 ? 'active' : ''}>Platinum 75%</span>
+                        <span className={percentage >= 100 ? 'active' : ''}>Centenary 100%</span>
+                    </div>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="stats-grid">
+                    <div className="stat-card">
+                        <div className="stat-icon green">
+                            <TrendingUp size={20} />
+                        </div>
+                        <div className="stat-info">
+                            <span className="stat-value">{participationRate.toFixed(0)}%</span>
+                            <span className="stat-label">Participation Rate</span>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon blue">
+                            <Award size={20} />
+                        </div>
+                        <div className="stat-info">
+                            <span className="stat-value">{participationCount}</span>
+                            <span className="stat-label">Contributors</span>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon orange">
+                            <Target size={20} />
+                        </div>
+                        <div className="stat-info">
+                            <span className="stat-value">{formatCurrency(5000)}</span>
+                            <span className="stat-label">Per Student Target</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl flex items-center gap-4">
-                        <div className={`p-3 rounded-xl bg-slate-800 ${theme.icon}`}>
-                            <TrendingUp size={24} />
-                        </div>
-                        <div>
-                            <p className="text-slate-400 text-sm font-medium">Participation Rate</p>
-                            <p className="text-2xl font-bold text-white">{participationRate.toFixed(0)}%</p>
-                        </div>
-                    </div>
-                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl flex items-center gap-4">
-                        <div className={`p-3 rounded-xl bg-slate-800 ${theme.icon}`}>
-                            <Trophy size={24} />
-                        </div>
-                        <div>
-                            <p className="text-slate-400 text-sm font-medium">Avg. Contribution</p>
-                            <p className="text-2xl font-bold text-white">₹{averageContribution.toFixed(0)}</p>
-                        </div>
-                    </div>
-                    <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl flex items-center gap-4">
-                        <div className={`p-3 rounded-xl bg-slate-800 ${theme.icon}`}>
-                            <Award size={24} />
-                        </div>
-                        <div>
-                            <p className="text-slate-400 text-sm font-medium">Top Contributor</p>
-                            <p className="text-2xl font-bold text-white">
-                                {department.students.length > 0
-                                    ? department.students.reduce((prev, current) => (prev.amountPaid > current.amountPaid) ? prev : current).name.split(' ')[0]
-                                    : "-"}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                {/* Students List */}
+                <div className="students-section">
+                    <h2 className="section-title">Students ({department.students.length})</h2>
+                    <div className="students-list">
+                        {department.students.map((student, index) => {
+                            const studentProgress = Math.min((student.amountPaid / 5000) * 100, 100);
+                            const status = student.amountPaid >= 5000 ? 'completed' : student.amountPaid > 0 ? 'partial' : 'pending';
 
-                {/* Student Table */}
-                <div className="bg-slate-900/30 border border-slate-800 rounded-3xl overflow-hidden p-1">
-                    <StudentTable students={department.students} className="w-full" />
+                            return (
+                                <div key={student.id} className="student-row">
+                                    <div className="student-rank">{index + 1}</div>
+                                    <div className="student-avatar">
+                                        {student.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="student-info">
+                                        <span className="student-name">{student.name}</span>
+                                        <div className="student-progress-bar">
+                                            <div
+                                                className="student-progress-fill"
+                                                style={{ width: `${studentProgress}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="student-amount-section">
+                                        <span className="student-amount">{formatCurrency(student.amountPaid)}</span>
+                                        <span className={`student-status ${status}`}>
+                                            {status === 'completed' ? '✓ Complete' : status === 'partial' ? 'Partial' : 'Pending'}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {department.students.length === 0 && (
+                            <div className="empty-state">
+                                <Users size={48} />
+                                <p>No students in this department yet</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </main>
