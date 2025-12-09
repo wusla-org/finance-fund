@@ -16,6 +16,7 @@ interface DataEntryFormProps {
 export function DataEntryForm({ departments }: DataEntryFormProps) {
     const router = useRouter();
     const [name, setName] = useState("");
+    const [admissionNumber, setAdmissionNumber] = useState("");
     const [departmentId, setDepartmentId] = useState(departments[0]?.id || "");
     const [amountPaid, setAmountPaid] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -46,6 +47,7 @@ export function DataEntryForm({ departments }: DataEntryFormProps) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name,
+                    admissionNumber,
                     departmentId,
                     amountPaid: Number(amountPaid),
                     action // Pass action if defined
@@ -64,6 +66,7 @@ export function DataEntryForm({ departments }: DataEntryFormProps) {
 
                 setMessage("✅ Student added successfully!");
                 setName("");
+                setAdmissionNumber("");
                 setAmountPaid("");
                 setShowConfirm(false);
                 setPendingData(null);
@@ -112,6 +115,18 @@ export function DataEntryForm({ departments }: DataEntryFormProps) {
                         onChange={(e) => setName(e.target.value)}
                         className="w-full px-4 py-3 bg-emerald-900/30 border border-emerald-500/20 rounded-xl text-emerald-100 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-emerald-700"
                         placeholder="John Doe"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-emerald-200/70 mb-2">Admission / CIC Number</label>
+                    <input
+                        type="text"
+                        required
+                        value={admissionNumber}
+                        onChange={(e) => setAdmissionNumber(e.target.value)}
+                        className="w-full px-4 py-3 bg-emerald-900/30 border border-emerald-500/20 rounded-xl text-emerald-100 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-emerald-700"
+                        placeholder="CIC-12345"
                     />
                 </div>
 

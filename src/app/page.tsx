@@ -64,14 +64,18 @@ async function getDashboardData() {
 
   // 4. Departments
   const departmentsData = await prisma.department.findMany({
-    include: { students: true },
+    include: {
+      students: {
+        select: { amountPaid: true } // Only select needed fields to avoid DB crash
+      }
+    },
     orderBy: { name: 'asc' }
   });
 
   const departments = departmentsData.map((dept) => {
     const studentCount = dept.students.length;
     const target = studentCount * 5000;
-    const collected = dept.students.reduce((acc: number, s) => acc + s.amountPaid, 0);
+    const collected = dept.students.reduce((acc: number, s: any) => acc + s.amountPaid, 0);
 
     return {
       id: dept.id,
@@ -84,7 +88,15 @@ async function getDashboardData() {
 
   // 5. Top Contributors
   const topContributors = await prisma.student.findMany({
-    include: { department: { select: { name: true } } },
+    select: {
+      id: true,
+      name: true,
+      amountPaid: true,
+      target: true, // Needed for types
+      status: true, // Needed for types
+      // admissionNumber: false, // Don't select
+      department: { select: { name: true } }
+    },
     orderBy: { amountPaid: 'desc' },
     take: 10,
   });

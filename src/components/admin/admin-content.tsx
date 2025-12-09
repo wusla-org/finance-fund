@@ -25,10 +25,12 @@ interface Department {
 interface Student {
     id: string;
     name: string;
+    admissionNumber?: string | null;
     amountPaid: number;
     department: {
         name: string;
     };
+    departmentId?: string;
 }
 
 interface AdminContentProps {
@@ -49,6 +51,7 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
 
     // Student form state
     const [studentName, setStudentName] = useState("");
+    const [admissionNumber, setAdmissionNumber] = useState("");
     const [departmentId, setDepartmentId] = useState(departments[0]?.id || "");
     const [amountPaid, setAmountPaid] = useState("");
     const [studentLoading, setStudentLoading] = useState(false);
@@ -58,8 +61,10 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
     const [selectedDeptForUpdate, setSelectedDeptForUpdate] = useState(""); // Department filter
     const [selectedStudent, setSelectedStudent] = useState("");
     const [additionalAmount, setAdditionalAmount] = useState("");
+    const [quickSearchQuery, setQuickSearchQuery] = useState("");
     const [updateLoading, setUpdateLoading] = useState(false);
     const [updateMessage, setUpdateMessage] = useState("");
+    const [searchStatus, setSearchStatus] = useState<{ found: boolean; msg: string } | null>(null);
 
     // Department form state
     const [deptName, setDeptName] = useState("");
@@ -81,9 +86,28 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
         }
     }, [departments, departmentId]);
 
-    // Reset student selection when department changes
+    // Reset student selection when department changes, BUT NOT if it was triggered by our quick search logic
     useEffect(() => {
-        setSelectedStudent("");
+        if (!selectedDeptForUpdate) {
+            setSelectedStudent("");
+            return;
+        }
+
+        // If we have a selected student, check if they are in the new department
+        // If they are NOT in the new department, clear the selection
+        if (selectedStudent) {
+            const student = recentStudents.find(s => s.id === selectedStudent);
+
+            // Matches if found AND departmentId matches (if available) or fall back to name comparison
+            const isMatch = student && (
+                student.departmentId === selectedDeptForUpdate ||
+                (student.department && departments.find(d => d.id === selectedDeptForUpdate)?.name === student.department.name)
+            );
+
+            if (!isMatch) {
+                setSelectedStudent("");
+            }
+        }
     }, [selectedDeptForUpdate]);
 
     const handleStudentSubmit = async (e: React.FormEvent) => {
@@ -103,6 +127,7 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: studentName.trim(),
+                    admissionNumber: admissionNumber.trim() || null,
                     departmentId: departmentId,
                     amountPaid: Number(amountPaid) || 0,
                 }),
@@ -113,6 +138,7 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
             if (res.ok) {
                 setStudentMessage("✓ Student added successfully!");
                 setStudentName("");
+                setAdmissionNumber("");
                 setAmountPaid("");
                 router.refresh();
                 // Clear message after 3 seconds
@@ -154,6 +180,7 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
                 setUpdateMessage(`✓ Added ${formatCurrency(Number(additionalAmount))} - New total: ${formatCurrency(data.newTotal)}`);
                 setAdditionalAmount("");
                 setSelectedStudent("");
+                setQuickSearchQuery(""); // Clear search as well
                 router.refresh();
                 setTimeout(() => setUpdateMessage(""), 4000);
             } else {
@@ -290,6 +317,18 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
                         </div>
 
                         <div className="form-group">
+                            <label className="form-label">Admission / CIC Number</label>
+                            <input
+                                type="text"
+                                required
+                                value={admissionNumber}
+                                onChange={(e) => setAdmissionNumber(e.target.value)}
+                                className="form-input"
+                                placeholder="e.g. CIC-123"
+                            />
+                        </div>
+
+                        <div className="form-group">
                             <label className="form-label">Department</label>
                             <select
                                 value={departmentId}
@@ -344,6 +383,55 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
                     </div>
 
                     <form onSubmit={handleUpdatePayment} className="admin-form">
+
+                        <div className="form-group mb-4 p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+                            <label className="form-label text-emerald-400">⚡ Quick Find (Admission No.)</label>
+                            <input
+                                type="text"
+                                value={quickSearchQuery}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setQuickSearchQuery(val);
+                                    if (val.trim()) {
+                                        // Find student by admission number (starts with - case insensitive)
+                                        const found = recentStudents.find(s =>
+                                            s.admissionNumber && s.admissionNumber.toLowerCase().startsWith(val.trim().toLowerCase())
+                                        );
+
+                                        if (found) {
+                                            setSearchStatus({ found: true, msg: `Found: ${found.name}` });
+
+                                            // Prefer using departmentId if available, otherwise find by name
+                                            let deptId = found.departmentId;
+
+                                            if (!deptId) {
+                                                const dept = departments.find(d => d.name === found.department.name);
+                                                deptId = dept?.id;
+                                            }
+
+                                            if (deptId) {
+                                                // Batch these updates
+                                                setSelectedDeptForUpdate(deptId);
+                                                // Use setTimeout to ensure this runs after any potential useEffect clearing
+                                                setTimeout(() => setSelectedStudent(found.id), 0);
+                                            }
+                                        } else {
+                                            setSearchStatus({ found: false, msg: "No match found" });
+                                        }
+                                    } else {
+                                        setSearchStatus(null);
+                                    }
+                                }}
+                                className={`form-input border-emerald-500/30 focus:border-emerald-500 ${searchStatus?.found ? 'border-green-500 bg-green-500/10' : ''} ${searchStatus?.found === false ? 'border-red-500 bg-red-500/10' : ''}`}
+                                placeholder="Enter Admission Number..."
+                            />
+                            {searchStatus && (
+                                <div className={`text-xs mt-1 ${searchStatus.found ? 'text-green-400' : 'text-red-400'}`}>
+                                    {searchStatus.msg}
+                                </div>
+                            )}
+                        </div>
+
                         <div className="form-group">
                             <label className="form-label">1. Select Department</label>
                             <select
@@ -372,7 +460,7 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
                                 <option value="">{selectedDeptForUpdate ? '-- Choose student --' : '-- Select department first --'}</option>
                                 {filteredStudents.map((student) => (
                                     <option key={student.id} value={student.id}>
-                                        {student.name} - {formatCurrency(student.amountPaid)}
+                                        {student.name} {student.admissionNumber ? `(${student.admissionNumber})` : ''} - {formatCurrency(student.amountPaid)}
                                     </option>
                                 ))}
                             </select>
@@ -385,6 +473,12 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
 
                         {selectedStudentInfo && (
                             <div className="selected-student-info">
+                                <span className="info-label">Name:</span>
+                                <span className="info-value text-white">{selectedStudentInfo.name}</span>
+                                <div className="w-full h-px bg-white/5 my-2"></div>
+                                <span className="info-label">Department:</span>
+                                <span className="info-value">{selectedStudentInfo.department.name}</span>
+                                <div className="w-full h-px bg-white/5 my-2"></div>
                                 <span className="info-label">Current Amount:</span>
                                 <span className="info-value">{formatCurrency(selectedStudentInfo.amountPaid)}</span>
                             </div>
@@ -496,7 +590,10 @@ export function AdminContent({ departments, recentStudents }: AdminContentProps)
                     {recentStudents.map((student) => (
                         <div key={student.id} className="recent-item">
                             <div className="recent-info">
-                                <span className="recent-name">{student.name}</span>
+                                <span className="recent-name">
+                                    {student.name}
+                                    {student.admissionNumber && <span className="text-sm text-gray-500 ml-2">({student.admissionNumber})</span>}
+                                </span>
                                 <span className="recent-dept">{student.department.name}</span>
                             </div>
                             <span className="recent-amount">{formatCurrency(student.amountPaid)}</span>

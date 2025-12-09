@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
         // Get current student
         const student = await prisma.student.findUnique({
             where: { id: studentId },
+            select: { amountPaid: true, target: true } // Only need these
         });
 
         if (!student) {
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
                 amountPaid: newTotal,
                 status: newStatus,
             },
+            select: { amountPaid: true, status: true } // Avoid returning admissionNumber
         });
 
         // Create a contribution record

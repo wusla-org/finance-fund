@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { name, departmentId, amountPaid, force, action } = body; // action: 'create' | 'update' | undefined
+        const { name, admissionNumber, departmentId, amountPaid, force, action } = body; // action: 'create' | 'update' | undefined
 
         // Validation
         if (!name || !departmentId || amountPaid === undefined) {
@@ -14,94 +14,136 @@ export async function POST(request: Request) {
             );
         }
 
-        // If action is explicitly 'create', skip duplicate check and just create
-        if (action === 'create') {
-            const status = amountPaid >= 5000 ? "COMPLETED" : amountPaid > 0 ? "PARTIAL" : "PENDING";
-            const student = await prisma.student.create({
-                data: {
-                    name: name.trim(),
-                    departmentId,
-                    amountPaid,
-                    status,
-                    target: 5000,
-                },
-            });
+        const normalizedInputName = name.trim().toLowerCase();
+        let existingStudent = null;
+        let matchType = null; // 'ID' | 'NAME'
 
-            await prisma.contribution.create({
-                data: {
-                    amount: amountPaid,
-                    studentId: student.id
-                }
+        // 1. Check by Admission Number
+        if (admissionNumber) {
+            existingStudent = await prisma.student.findUnique({
+                where: { admissionNumber: admissionNumber.trim() }
             });
-
-            return NextResponse.json(student);
+            if (existingStudent) matchType = 'ID';
         }
 
-        // Fetch all students in the department to do a robust JS-based fuzzy check
-        const deptStudents = await prisma.student.findMany({
-            where: { departmentId },
-            select: { id: true, name: true, amountPaid: true }
-        });
+        // 2. Check by Fuzzy Name (Weak Match) if not found by ID
+        if (!existingStudent) {
+            // Fetch all students in the department
+            const deptStudents = await prisma.student.findMany({
+                where: { departmentId },
+                select: { id: true, name: true, amountPaid: true, admissionNumber: true }
+            });
 
-        const normalizedInputName = name.trim().toLowerCase();
-        const existingStudent = deptStudents.find(s =>
-            s.name.trim().toLowerCase() === normalizedInputName
-        );
+            existingStudent = deptStudents.find(s =>
+                s.name.trim().toLowerCase() === normalizedInputName
+            ) || null;
+            if (existingStudent) matchType = 'NAME';
+        }
 
-        let student;
-
+        // Handle Existing Student Found
         if (existingStudent) {
-            // If duplicate found and no action specified (or force is false), ask for confirmation
-            // We now support 'action' param. If action is 'update', we proceed.
-            if (action !== 'update' && !force) {
+            // If action is explicitly 'create':
+            if (action === 'create') {
+                // If ID match, we cannot create a new student with same ID (Unique Constraint)
+                if (matchType === 'ID') {
+                    return NextResponse.json(
+                        { error: `Student with Admission Number "${admissionNumber}" already exists.` },
+                        { status: 400 }
+                    );
+                }
+                // If Name match, continue (allow duplicate names if IDs are different or not provided)
+            }
+            // If action is 'update' or no action (check)
+            else {
+                if (action === 'update' || force) {
+                    const newAmount = existingStudent.amountPaid + amountPaid;
+                    const newStatus = newAmount >= 5000 ? "COMPLETED" : newAmount > 0 ? "PARTIAL" : "PENDING";
+
+                    const updatedStudent = await prisma.student.update({
+                        where: { id: existingStudent.id },
+                        data: {
+                            amountPaid: newAmount,
+                            status: newStatus,
+                            // Ensure admission number is updated if provided and missing
+                            ...(admissionNumber && !existingStudent.admissionNumber ? { admissionNumber: admissionNumber.trim() } : {})
+                        },
+                        select: {
+                            id: true,
+                            name: true,
+                            departmentId: true,
+                            amountPaid: true,
+                            status: true,
+                            target: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            admissionNumber: true
+                        }
+                    });
+
+                    await prisma.contribution.create({
+                        data: {
+                            amount: amountPaid,
+                            studentId: updatedStudent.id
+                        }
+                    });
+
+                    return NextResponse.json(updatedStudent);
+                }
+
                 return NextResponse.json({
                     requiresConfirmation: true,
                     message: `Student "${existingStudent.name}" already exists in this department.`,
                     existingStudent
                 });
             }
+        }
 
-            // Update existing (action === 'update' or force === true)
-            const newAmount = existingStudent.amountPaid + amountPaid;
-            const newStatus = newAmount >= 5000 ? "COMPLETED" : newAmount > 0 ? "PARTIAL" : "PENDING";
+        // Create New Student
+        const status = amountPaid >= 5000 ? "COMPLETED" : amountPaid > 0 ? "PARTIAL" : "PENDING";
 
-            student = await prisma.student.update({
-                where: { id: existingStudent.id },
+        try {
+            const newStudent = await prisma.student.create({
                 data: {
-                    amountPaid: newAmount,
-                    status: newStatus,
-                }
-            });
-
-            await prisma.contribution.create({
-                data: {
-                    amount: amountPaid,
-                    studentId: student.id
-                }
-            });
-        } else {
-            // Create new
-            const status = amountPaid >= 5000 ? "COMPLETED" : amountPaid > 0 ? "PARTIAL" : "PENDING";
-            student = await prisma.student.create({
-                data: {
-                    name: name.trim(), // Store trimmed name
+                    name: name.trim(),
+                    admissionNumber: admissionNumber ? admissionNumber.trim() : null, // Correctly save admission number
                     departmentId,
                     amountPaid,
                     status,
                     target: 5000,
                 },
+                select: {
+                    id: true,
+                    name: true,
+                    departmentId: true,
+                    amountPaid: true,
+                    status: true,
+                    target: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    admissionNumber: true
+                }
             });
 
             await prisma.contribution.create({
                 data: {
                     amount: amountPaid,
-                    studentId: student.id
+                    studentId: newStudent.id
                 }
             });
+
+            return NextResponse.json(newStudent);
+        } catch (dbError: any) {
+            // Handle unique constraint violation for admissionNumber explicitly
+            if (dbError.code === 'P2002' && dbError.meta?.target?.includes('admissionNumber')) {
+                return NextResponse.json(
+                    { error: `Admission Number "${admissionNumber}" is already in use.` },
+                    { status: 400 }
+                );
+            }
+            throw dbError;
         }
 
-        return NextResponse.json(student);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error creating student:", error);
         return NextResponse.json(
             { error: "Failed to create student", details: error instanceof Error ? error.message : String(error) },
@@ -116,15 +158,12 @@ export async function DELETE(request: Request) {
         const { ids, deleteAll } = body;
 
         if (deleteAll) {
-            // Delete all students
-            // Due to foreign key constraints, we might need to delete contributions first if cascade isn't set up in DB
             await prisma.contribution.deleteMany({});
             await prisma.student.deleteMany({});
             return NextResponse.json({ message: "All students deleted successfully" });
         }
 
         if (ids && Array.isArray(ids) && ids.length > 0) {
-            // Delete specific students
             await prisma.contribution.deleteMany({
                 where: { studentId: { in: ids } }
             });

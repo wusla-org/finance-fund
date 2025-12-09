@@ -10,16 +10,17 @@ datasource db {
 }
 
 model Department {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  students    Student[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  name      String    @unique
+  students  Student[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Student {
   id           String     @id @default(cuid())
-  name         String
+  admissionNumber String?    @unique
+  name            String
   departmentId String
   department   Department @relation(fields: [departmentId], references: [id])
   amountPaid   Float      @default(0)
@@ -28,8 +29,8 @@ model Student {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  @@index([departmentId])
   contributions Contribution[]
+  @@index([departmentId])
 }
 
 model Contribution {

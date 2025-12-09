@@ -64,27 +64,38 @@ export async function GET() {
 
         // 4. Departments
         const departmentsData = await prisma.department.findMany({
-            include: { students: true },
+            include: {
+                students: {
+                    select: { amountPaid: true } // Only select needed info
+                }
+            },
             orderBy: { name: 'asc' }
         });
 
         const departments = departmentsData.map((dept) => {
             const studentCount = dept.students.length;
             const target = studentCount * 5000; // Rule: 5k per student
-            const collected = dept.students.reduce((acc, s) => acc + s.amountPaid, 0);
+            const collected = dept.students.reduce((acc: number, s: any) => acc + s.amountPaid, 0);
 
             return {
                 id: dept.id,
                 name: dept.name,
                 totalCollected: collected,
-                target: target > 0 ? target : 5000, // Avoid 0 target if no students, or maybe 0 is fine
+                target: target > 0 ? target : 5000,
                 studentCount: studentCount,
             };
         });
 
         // 5. Recent Students (Activity)
         const recentStudents = await prisma.student.findMany({
-            include: { department: { select: { name: true } } },
+            select: {
+                id: true,
+                name: true,
+                amountPaid: true,
+                target: true,
+                status: true,
+                department: { select: { name: true } }
+            },
             orderBy: { updatedAt: 'desc' },
             take: 10,
         });
