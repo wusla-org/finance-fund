@@ -55,14 +55,14 @@ export function HeroStats({ totalCollected, goal, topStudents, dailyStats }: Her
             isGold: true
         };
         if (pct >= 75) return {
-            gradient: "bg-gradient-to-br from-emerald-500 to-green-600",
+            gradient: "bg-gradient-to-br from-amber-500 to-yellow-600",
             text: "text-white",
-            subText: "text-emerald-100",
+            subText: "text-amber-100",
             progressTrack: "bg-black/20",
             progressFill: "bg-white",
             iconBg: "bg-white/20",
             iconColor: "text-white",
-            shadow: "shadow-emerald-500/50",
+            shadow: "shadow-amber-500/50",
             isGold: false
         };
         if (pct >= 50) return {
@@ -225,7 +225,7 @@ export function HeroStats({ totalCollected, goal, topStudents, dailyStats }: Her
                                         <p className="text-sm font-bold text-gray-800">
                                             {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(student.amount)}
                                         </p>
-                                        <div className="flex items-center justify-end gap-1 text-xs text-emerald-500">
+                                        <div className="flex items-center justify-end gap-1 text-xs text-amber-500">
                                             <TrendingUp size={12} />
                                             <span>Top</span>
                                         </div>
@@ -292,7 +292,7 @@ export function HeroStats({ totalCollected, goal, topStudents, dailyStats }: Her
 
                                 // Dynamic colors based on theme
                                 const chartColor = currentTheme.isGold ? "#d97706" : // amber-600
-                                    currentPercentage >= 75 ? "#059669" : // emerald-600
+                                    currentPercentage >= 75 ? "#d97706" : // amber-600
                                         currentPercentage >= 50 ? "#2563EB" : // blue-600
                                             currentPercentage >= 25 ? "#ea580c" : // orange-600
                                                 "#dc2626"; // red-600

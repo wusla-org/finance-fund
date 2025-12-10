@@ -151,6 +151,53 @@ export async function POST(request: Request) {
         );
     }
 }
+}
+
+export async function PUT(request: Request) {
+    try {
+        const body = await request.json();
+        const { id, name, admissionNumber, departmentId, amountPaid } = body;
+
+        if (!id) {
+            return NextResponse.json({ error: "Student ID is required" }, { status: 400 });
+        }
+
+        // Validate duplicates if admission number is changing
+        if (admissionNumber) {
+            const existing = await prisma.student.findUnique({
+                where: { admissionNumber: admissionNumber.trim() }
+            });
+            if (existing && existing.id !== id) {
+                return NextResponse.json(
+                    { error: `Admission Number "${admissionNumber}" is already in use by another student.` },
+                    { status: 400 }
+                );
+            }
+        }
+
+        const newStatus = amountPaid >= 5000 ? "COMPLETED" : amountPaid > 0 ? "PARTIAL" : "PENDING";
+
+        const updatedStudent = await prisma.student.update({
+            where: { id },
+            data: {
+                name: name ? name.trim() : undefined,
+                admissionNumber: admissionNumber ? admissionNumber.trim() : undefined,
+                departmentId: departmentId || undefined,
+                amountPaid: amountPaid !== undefined ? amountPaid : undefined,
+                status: amountPaid !== undefined ? newStatus : undefined,
+            },
+        });
+
+        return NextResponse.json(updatedStudent);
+
+    } catch (error) {
+        console.error("Error updating student:", error);
+        return NextResponse.json(
+            { error: "Failed to update student", details: error instanceof Error ? error.message : String(error) },
+            { status: 500 }
+        );
+    }
+}
 
 export async function DELETE(request: Request) {
     try {

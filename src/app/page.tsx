@@ -12,7 +12,7 @@ async function getDashboardData() {
 
   // 2. Top Students (only those who have contributed)
   const groupedStudents = await prisma.student.groupBy({
-    by: ['name', 'departmentId'],
+    by: ['name', 'departmentId', 'admissionNumber'],
     _sum: { amountPaid: true },
     where: { amountPaid: { gt: 0 } }, // Only students who have paid
     orderBy: { _sum: { amountPaid: 'desc' } },
@@ -31,6 +31,7 @@ async function getDashboardData() {
     .map((s, index) => ({
       id: `${s.name}-${s.departmentId}-${index}`,
       name: s.name,
+      admissionNumber: s.admissionNumber,
       amount: s._sum.amountPaid || 0,
       department: deptMap.get(s.departmentId) || 'Unknown',
     }));

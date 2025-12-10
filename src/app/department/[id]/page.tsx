@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { ArrowLeft, Users, Target, TrendingUp, Award, Trophy, Crown, Star } from "lucide-react";
 import { notFound } from "next/navigation";
+import { AutoRefresh } from "@/components/ui/auto-refresh";
 
 interface DepartmentPageProps {
     params: Promise<{
@@ -102,8 +103,13 @@ export default async function DepartmentPage({ params }: DepartmentPageProps) {
     const club = getClubInfo(percentage);
     const ClubIcon = club.icon;
 
+
+
+    // ...
+
     return (
         <main className="department-page">
+            <AutoRefresh intervalMs={8000} />
             <div className="department-container">
                 {/* Back Button */}
                 <Link href="/" className="back-link">
@@ -211,6 +217,7 @@ export default async function DepartmentPage({ params }: DepartmentPageProps) {
                                     </div>
                                     <div className="student-info">
                                         <span className="student-name">{student.name}</span>
+                                        <span className="text-xs text-muted-foreground">{student.admissionNumber}</span>
                                         <div className="student-progress-bar">
                                             <div
                                                 className="student-progress-fill"

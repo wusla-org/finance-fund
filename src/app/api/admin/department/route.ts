@@ -42,6 +42,41 @@ export async function POST(request: Request) {
     }
 }
 
+export async function PUT(request: Request) {
+    try {
+        const body = await request.json();
+        const { id, name } = body;
+
+        if (!id || !name) {
+            return NextResponse.json({ error: "ID and Name are required" }, { status: 400 });
+        }
+
+        const existing = await prisma.department.findUnique({
+            where: { name: name.trim() }
+        });
+
+        if (existing && existing.id !== id) {
+            return NextResponse.json(
+                { error: "Department name already exists" },
+                { status: 409 }
+            );
+        }
+
+        const updated = await prisma.department.update({
+            where: { id },
+            data: { name: name.trim() }
+        });
+
+        return NextResponse.json(updated);
+    } catch (error) {
+        console.error("Error updating department:", error);
+        return NextResponse.json(
+            { error: "Failed to update department", details: error instanceof Error ? error.message : String(error) },
+            { status: 500 }
+        );
+    }
+}
+
 export async function DELETE(request: Request) {
     try {
         const body = await request.json();

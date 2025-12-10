@@ -76,7 +76,7 @@ export function DepartmentLeaderboard() {
                                 <Medal size={40} />
                             </div>
                             <div className="text-2xl font-bold text-center mb-1">{topThree[1].name}</div>
-                            <div className="text-green-400 font-mono font-bold text-xl">${topThree[1].total.toLocaleString()}</div>
+                            <div className="text-amber-400 font-mono font-bold text-xl">${topThree[1].total.toLocaleString()}</div>
                             <div className="mt-4 text-sm text-slate-500 flex items-center gap-1">
                                 <Users size={14} /> {topThree[1].count} contributors
                             </div>
@@ -170,7 +170,7 @@ export function DepartmentLeaderboard() {
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="font-bold text-green-400">${dept.total.toLocaleString()}</div>
+                                <div className="font-bold text-amber-400">${dept.total.toLocaleString()}</div>
                             </div>
                         </GlassCard>
                     ))}

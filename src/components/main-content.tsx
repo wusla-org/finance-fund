@@ -12,6 +12,7 @@ interface DashboardData {
         topStudents: {
             id: string;
             name: string;
+            admissionNumber?: string | null;
             amount: number;
             department: string;
         }[];
@@ -148,6 +149,7 @@ export function MainContent({ data }: MainContentProps) {
                             </div>
                             <div className="contributor-info">
                                 <span className="contributor-name">{student.name}</span>
+                                <span className="text-xs text-muted-foreground">{student.admissionNumber}</span>
                                 <span className="contributor-dept">{student.department}</span>
                             </div>
                             <span className="contributor-amount">{formatCurrency(student.amount)}</span>
