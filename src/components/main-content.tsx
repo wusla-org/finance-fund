@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Users, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import { RollingNumber } from "@/components/ui/rolling-number";
 
 interface DashboardData {
     stats: {
@@ -56,8 +57,7 @@ export function MainContent({ data }: MainContentProps) {
 
     // Sort departments by collected amount
     const sortedDepts = [...departments]
-        .sort((a, b) => b.totalCollected - a.totalCollected)
-        .slice(0, 4);
+        .sort((a, b) => b.totalCollected - a.totalCollected);
 
     return (
         <main className="main-content">
@@ -94,7 +94,7 @@ export function MainContent({ data }: MainContentProps) {
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.3, delay: 0.2 }}
                 >
-                    {formatCurrency(stats.totalCollected)}
+                    <RollingNumber value={stats.totalCollected} prefix="₹" />
                 </motion.span>
                 <div className="balance-goal">
                     of {formatCurrency(stats.goal)} goal

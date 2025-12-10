@@ -86,8 +86,8 @@ async function getDashboardData() {
     };
   });
 
-  // 5. Top Contributors
-  const topContributors = await prisma.student.findMany({
+  // 5. Recent Activity
+  const recentActivity = await prisma.student.findMany({
     select: {
       id: true,
       name: true,
@@ -97,14 +97,15 @@ async function getDashboardData() {
       // admissionNumber: false, // Don't select
       department: { select: { name: true } }
     },
-    orderBy: { amountPaid: 'desc' },
+    orderBy: { updatedAt: 'desc' },
     take: 10,
   });
 
   return {
     stats: { totalCollected, goal, topStudents, dailyStats },
     departments,
-    students: topContributors
+    departments,
+    students: recentActivity
   };
 }
 

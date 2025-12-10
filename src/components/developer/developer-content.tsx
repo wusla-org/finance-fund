@@ -17,6 +17,7 @@ import {
 interface Student {
     id: string;
     name: string;
+    admissionNumber?: string | null;
     amountPaid: number;
     target: number;
     status: string;
@@ -63,7 +64,8 @@ export function DeveloperContent({ students, departments, stats }: DeveloperCont
 
     const filteredStudents = students.filter((s) =>
         s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.department.name.toLowerCase().includes(searchTerm.toLowerCase())
+        s.department.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (s.admissionNumber && s.admissionNumber.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     // Delete single student - INSTANT DELETE (no confirmation)
@@ -245,7 +247,7 @@ export function DeveloperContent({ students, departments, stats }: DeveloperCont
                         <Search size={16} className="search-icon" />
                         <input
                             type="text"
-                            placeholder="Search students..."
+                            placeholder="Search by Name, Dept, or CIC No..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="search-input"
@@ -255,6 +257,7 @@ export function DeveloperContent({ students, departments, stats }: DeveloperCont
                     {/* Table */}
                     <div className="data-table">
                         <div className="table-header">
+                            <span style={{ width: '100px' }}>CIC No.</span>
                             <span style={{ flex: 1 }}>Name</span>
                             <span style={{ width: '140px' }}>Department</span>
                             <span style={{ width: '90px', textAlign: 'right' }}>Amount</span>
@@ -264,6 +267,9 @@ export function DeveloperContent({ students, departments, stats }: DeveloperCont
                         <div className="table-body">
                             {filteredStudents.map((student) => (
                                 <div key={student.id} className="table-row">
+                                    <span className="row-cic" style={{ width: '100px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                        {student.admissionNumber || '-'}
+                                    </span>
                                     <span className="row-name" style={{ flex: 1 }}>{student.name}</span>
                                     <span className="row-dept" style={{ width: '140px' }}>{student.department.name}</span>
                                     <span className="row-amount" style={{ width: '90px', textAlign: 'right' }}>
