@@ -64,7 +64,7 @@ export function InstallPrompt() {
         <>
             <button
                 onClick={handleInstallClick}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--primary)] bg-[rgba(0,255,163,0.1)] rounded-xl hover:bg-[rgba(0,255,163,0.2)] transition-all mt-4 border border-[var(--primary-dark)]"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[var(--primary)] bg-[rgba(255,200,0,0.15)] rounded-xl hover:bg-[rgba(255,200,0,0.25)] transition-all mt-4 border border-[var(--primary-dark)] shadow-[var(--glow-primary)]"
             >
                 <Download size={18} />
                 Install App
